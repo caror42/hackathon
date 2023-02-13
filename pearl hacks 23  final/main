@@ -1,0 +1,357 @@
+import pygame
+from pygame.locals import *
+import numpy as np
+
+pygame.init()
+screen = pygame.display.set_mode((800, 600))
+
+# Making background image
+background = pygame.image.load('./night sky.webp')
+background = pygame.transform.scale(background,(800,600))
+
+# Making star image
+starImg = pygame.image.load('./star.png').convert_alpha()
+starImg = pygame.transform.scale(starImg,(30,30))
+
+# Making collision image
+splatImg = pygame.image.load('./splat.png').convert_alpha()
+splatImg = pygame.transform.scale(splatImg, (60,60))
+
+stars = []
+timestep = 2*10**-10
+G = 6.6743*10**-11
+
+# Creating properties of stars
+class star:
+    def __init__(self, xpos, ypos, xvel, yvel, mass):
+        self.xpos = xpos
+        self.ypos = ypos
+        self.xvel = xvel
+        self.yvel = yvel
+        self.mass = mass
+    def setPos(self, xpos, ypos):
+        self.xpos = xpos
+        self.ypos = ypos
+    def setVel(self, xvel, yvel):
+        self.xvel = xvel
+        self.yvel = yvel
+
+# Functions for calculations
+def angToXY(angle, mag):
+    return(mag*np.cos(angle), mag*np.sin(angle))
+def distance(x1, y1, x2, y2):
+    return(np.sqrt((x1-x2)**2+(y1-y2)**2))
+def XYToAng(x, y):
+    if x == 0:
+        if y > 0:
+            ang = np.pi/2
+        else:
+            ang = 3*np.pi/2
+    elif (y < 0 and x < 0) or (y > 0 and x < 0):
+        ang = np.arctan(y/x) + np.pi
+    elif (y == 0 and x < 0):
+        ang = np.pi
+    else:
+        ang = np.arctan(y/x)
+    return(ang,np.sqrt(x**2+y**2))
+def addVec(x1, y1, x2, y2):
+    return(x1+x2, y1+y2)
+
+# Updates stars' postitions
+def newVelAndPos(stars):
+    newXVel = []
+    newYVel = []
+    toDelete = []
+    for stary in stars:
+        currXVel = stary.xvel
+        currYVel = stary.yvel
+        for staryy in stars:
+            if(staryy != stary):
+                if (distance(stary.xpos, stary.ypos, staryy.xpos, staryy.ypos) > 10):
+                    a = G*staryy.mass/(distance(stary.xpos, stary.ypos, staryy.xpos, staryy.ypos)**2)
+                    aAng = XYToAng(staryy.xpos-stary.xpos, staryy.ypos-stary.ypos)[0]
+                    ax, ay = angToXY(aAng, a)
+                    currXVel = (ax*timestep+currXVel)
+                    currYVel = (ay*timestep+currYVel)
+                elif (distance(stary.xpos, stary.ypos, staryy.xpos, staryy.ypos) < 2):
+                    if staryy not in toDelete and stary not in toDelete:
+                        splat(staryy, stary)
+                        toDelete.append(staryy)
+                        toDelete.append(stary)
+        newXVel.append(currXVel)
+        newYVel.append(currYVel)
+    for i in range(len(stars)):
+        stars[i].setVel(newXVel[i], newYVel[i])
+        stars[i].setPos(stars[i].xpos+newXVel[i]*timestep, stars[i].ypos+newYVel[i]*timestep)
+    if toDelete:
+        for thing in toDelete:
+            stars.remove(thing)
+
+# Giving us an easy way to display text on the screen
+def text(word, x, y, size):
+    font = pygame.font.SysFont(None, size)
+    text = font.render("{}".format(word), True, (255,255,255))
+    return screen.blit(text, (x,y))
+
+# Saving users' inputs to mass, xvel, and yvel
+def inpt():
+    # Taking input to mass
+    word = ""
+    text("Please enter your desired mass (10^30 kg): ", 300, 350, 25)
+    pygame.display.flip()
+    done = False # Done giving input?
+
+    while not done:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    done = True
+                else:
+                    word += chr(event.key)
+                    text(word, 670, 350, 25)
+                    pygame.display.flip()
+                
+    text(word, 670, 350, 25)
+    pygame.display.flip()
+    mass = int(word) * 10**30
+
+    # Taking input to xvel
+    word = ""
+    text("Please enter your desired x velocity (10^8 m/s): ", 300, 400, 25)
+    pygame.display.flip()
+    done = False # Done giving input?
+
+    while not done:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    done = True
+                else:
+                    word += chr(event.key)
+                    text(word, 700, 400, 25)
+                    pygame.display.flip()
+                
+    text(word, 700, 400, 25)
+    pygame.display.flip()
+    xvel = int(word) * 10**8
+
+    # Taking input to yvel
+    word = ""
+    text("Please enter your desired y velocity (10^8 m/s): ", 300, 450, 25)
+    pygame.display.flip()
+    done = False # Done giving input?
+
+    while not done:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    done = True
+                else:
+                    word += chr(event.key)
+                    text(word, 700, 450, 25)
+                    pygame.display.flip()
+                
+    text(word, 700, 450, 25)
+    pygame.display.flip()
+    yvel = int(word) * 10**8
+
+    # Return values to initialize stars
+    return(mass, xvel, yvel)
+
+# Ask user if they are done adding stars after each one
+def done():
+    word = ""
+    text("Add more stars? (y/n) ", 300, 350, 25)
+    pygame.display.flip()
+    done = False # Done giving input?
+
+    while not done:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    done = True
+                else:
+                    word += chr(event.key)
+                    text(word, 500, 350, 25)
+                    pygame.display.flip()
+    
+    if word == "y":
+        return False # no more stars
+    elif word == "n":
+        return True # more stars
+    return False # if user misspells, we will take it as a no
+
+# EXPLOSION
+def splat(star1, star2):
+    start_time = pygame.time.get_ticks()
+    # Screen stops for 0.3 seconds so we can see the splat
+    while pygame.time.get_ticks() < start_time + 300:
+        # Splat appears midway between the stars
+        screen.blit(splatImg, ((star1.xpos + star2.xpos)/2 - 30, (star1.ypos + star2.ypos)/2 - 30))
+        pygame.display.flip()
+
+# Presets!
+def preset():
+    word = ""
+    text("Would you like to use a preset? (y/n) ", 300, 350, 25)
+    pygame.display.flip()
+    done = False # Done giving input?
+
+    while not done:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    done = True
+                else:
+                    word += chr(event.key)
+                    text(word, 610, 350, 25)
+                    pygame.display.flip()
+    
+    if word == "n":
+        screen.blit(background,(0,0))
+        return False # No preset
+    
+    screen.blit(background,(0,0))
+    word = ""
+    text("Orbit, Collision, Dance, or Hive? (o/c/d/h) ", 300, 350, 25)
+    pygame.display.flip()
+
+    done = False # Done giving input?
+
+    while not done:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    done = True
+                else:
+                    word += chr(event.key)
+                    text(word, 650, 350, 25)
+                    pygame.display.flip()
+    
+    if word == "o": # Orbit
+        stars.append(star(400, 350, 0, 0, 10**32))
+        stars.append(star(400, 150, 5*10**9, 0, 10**30))
+        return True
+    elif word == "c": # Collision
+        stars.append(star(50, 200, 5*10**9, 0, 10**31))
+        stars.append(star(700, 200, 5*-10**9, 0, 10**31))
+        return True
+    elif word == "d": # Dance
+        stars.append(star(400, 150, 0, 2*10**8, 10**31))
+        stars.append(star(220, 350, -1*10**8, -1*10**8, 10**31))
+        stars.append(star(580, 300, .5*10**8, -.6*10**8, 10**31))
+        return True
+    elif word == "h": # Hive
+        # 10 stars with randomized values
+        for i in range(10):
+            stars.append(star(800*np.random.rand(), 600*np.random.rand(), np.random.rand()*10**9, np.random.rand()*10**9, 10**29 + np.random.rand()*10**32))
+        return True
+    
+    screen.blit(background,(0,0))
+    return False
+
+running = False
+finished = False
+intro = True
+
+# Intro screen
+while intro:
+    screen.blit(background, (0,0))
+
+    # Introduction
+    text("Welcome to Caroline and Kate's", 50, 75, 40)
+    text("Gravity Simulation!", 100, 125, 40)
+    text("How to play:", 150, 200, 35)
+    text("First, you will choose whether or not to use preset stars. If not, you will initialize", 50, 275, 25)
+    text("each star's position, mass, and velocity. Click anywhere on the screen to place a star.", 50, 325, 25)
+    text("After each star, you can decide whether or not to continue placing stars. Once you", 50, 375, 25)
+    text("choose to stop placing stars, the simulation", 50, 425, 25)
+    text("will begin! We hope you have fun!", 50, 475, 25)
+
+    # Light shade of button
+    light = (139, 93, 140)
+  
+    # Dark shade of button
+    dark = (102, 70, 117)
+
+    # Button Outline Color
+    outline = (92, 60, 107)
+
+    pos = pygame.mouse.get_pos()
+
+    # Drawing the button (dark or light)
+    if 450 <= pos[0] <= 590 and 430 <= pos[1] <= 490:
+        pygame.draw.rect(screen, outline, [453,433,143,63])
+        pygame.draw.rect(screen, dark, [450,430,140,60])  
+    else:
+        pygame.draw.rect(screen, outline, [453,433,143,63])
+        pygame.draw.rect(screen, light, [450,430,140,60])
+    
+    # Are we clicking the button?
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            if 450 <= pos[0] <= 590 and 430 <= pos[1] <= 490:
+                intro = False
+
+    # Start text
+    text("START", 475, 445, 40)
+
+    pygame.display.flip()
+                
+running = True
+presetGone = False
+
+# Main program
+while running:
+    screen.blit(background,(0,0))
+    # Do you want to use a preset?
+    if (not presetGone):
+        presett = preset()
+        presetGone = True
+        screen.blit(background,(0,0))
+        if presett:
+            finished = True
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1:
+                if (not presett):
+                    xpos = pygame.mouse.get_pos()[0]
+                    ypos = pygame.mouse.get_pos()[1]
+                    mass, xvel, yvel = inpt()
+                    stars.append(star(xpos, ypos, xvel, yvel, mass))
+                    screen.blit(background,(0,0))
+                    finished = done()
+
+    # Drawing stars
+    for item in stars:
+        screen.blit(starImg, (item.xpos - 15, item.ypos - 15))
+        if (item.xpos > 850 or item.xpos < -50 or item.ypos > 650 or item.ypos < -50):
+            stars.remove(item)
+    
+    # If no stars left, end
+    if finished == True:
+        if not stars:
+            text("We hope you enjoyed playing our game!", 120, 200, 40)
+            text("See you next time!", 250, 300, 40)
+        else:
+            newVelAndPos(stars)
+
+    pygame.display.flip()
+
+pygame.quit()
