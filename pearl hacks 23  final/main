@@ -6,15 +6,15 @@ pygame.init()
 screen = pygame.display.set_mode((800, 600))
 
 # Making background image
-background = pygame.image.load('./night sky.webp')
+background = pygame.image.load('./pearl hacks 23  final/night sky.webp')
 background = pygame.transform.scale(background,(800,600))
 
 # Making star image
-starImg = pygame.image.load('./star.png').convert_alpha()
+starImg = pygame.image.load('./pearl hacks 23  final/star.png').convert_alpha()
 starImg = pygame.transform.scale(starImg,(30,30))
 
 # Making collision image
-splatImg = pygame.image.load('./splat.png').convert_alpha()
+splatImg = pygame.image.load('./pearl hacks 23  final/splat.png').convert_alpha()
 splatImg = pygame.transform.scale(splatImg, (60,60))
 
 stars = []
@@ -108,10 +108,27 @@ def inpt():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN:
                     done = True
-                else:
+                elif event.key == K_BACKSPACE:
+                    word = word[:-1]
+                    screen.blit(background,(0,0))
+                    text("Please enter your desired mass (10^30 kg): ", 300, 350, 25)
+                    text(word, 670, 350, 25)
+                    pygame.display.flip()
+                elif event.key in [K_0, K_1, K_2, K_3, K_4, K_5, K_6, K_7, K_8, K_9]:
                     word += chr(event.key)
                     text(word, 670, 350, 25)
                     pygame.display.flip()
+                else:
+                    start_time = pygame.time.get_ticks()
+                    while pygame.time.get_ticks() < start_time + 500:
+                        text("ERROR: Invalid Input", 400, 200, 25)
+                        pygame.display.flip()
+                    screen.blit(background,(0,0))
+                    text("Please enter your desired mass (10^30 kg): ", 300, 350, 25)
+                    text(word, 670, 350, 25)
+                    pygame.display.flip()
+                    
+                    
                 
     text(word, 670, 350, 25)
     pygame.display.flip()
@@ -130,8 +147,23 @@ def inpt():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN:
                     done = True
-                else:
+                elif event.key == K_BACKSPACE:
+                    word = word[:-1]
+                    screen.blit(background,(0,0))
+                    text("Please enter your desired x velocity (10^8 m/s): ", 300, 400, 25)
+                    text(word, 700, 400, 25)
+                    pygame.display.flip()
+                elif event.key in [K_MINUS, K_0, K_1, K_2, K_3, K_4, K_5, K_6, K_7, K_8, K_9]:
                     word += chr(event.key)
+                    text(word, 700, 400, 25)
+                    pygame.display.flip()
+                else:
+                    start_time = pygame.time.get_ticks()
+                    while pygame.time.get_ticks() < start_time + 500:
+                        text("ERROR: Invalid Input", 400, 200, 25)
+                        pygame.display.flip()
+                    screen.blit(background,(0,0))
+                    text("Please enter your desired x velocity (10^8 m/s): ", 300, 400, 25)
                     text(word, 700, 400, 25)
                     pygame.display.flip()
                 
@@ -152,8 +184,23 @@ def inpt():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN:
                     done = True
-                else:
+                elif event.key == K_BACKSPACE:
+                    word = word[:-1]
+                    screen.blit(background,(0,0))
+                    text("Please enter your desired y velocity (10^8 m/s): ", 300, 450, 25)
+                    text(word, 700, 450, 25)
+                    pygame.display.flip()
+                elif event.key in [K_MINUS, K_0, K_1, K_2, K_3, K_4, K_5, K_6, K_7, K_8, K_9]:
                     word += chr(event.key)
+                    text(word, 700, 450, 25)
+                    pygame.display.flip()
+                else:
+                    start_time = pygame.time.get_ticks()
+                    while pygame.time.get_ticks() < start_time + 500:
+                        text("ERROR: Invalid Input", 400, 200, 25)
+                        pygame.display.flip()
+                    screen.blit(background,(0,0))
+                    text("Please enter your desired y velocity (10^8 m/s): ", 300, 450, 25)
                     text(word, 700, 450, 25)
                     pygame.display.flip()
                 
@@ -235,8 +282,23 @@ def preset():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN:
                     done = True
-                else:
+                elif event.key == K_BACKSPACE:
+                    word = word[:-1]
+                    screen.blit(background,(0,0))
+                    text("Orbit, Collision, Dance, or Hive? (o/c/d/h) ", 300, 350, 25)
+                    text(word, 650, 350, 25)
+                    pygame.display.flip()
+                elif event.key in [K_o, K_c, K_d, K_h]:
                     word += chr(event.key)
+                    text(word, 650, 350, 25)
+                    pygame.display.flip()
+                else:
+                    start_time = pygame.time.get_ticks()
+                    while pygame.time.get_ticks() < start_time + 500:
+                        text("ERROR: Invalid Input", 400, 200, 25)
+                        pygame.display.flip()
+                    screen.blit(background,(0,0))
+                    text("Orbit, Collision, Dance, or Hive? (o/c/d/h) ", 300, 350, 25)
                     text(word, 650, 350, 25)
                     pygame.display.flip()
     
